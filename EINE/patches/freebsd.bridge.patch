@@ -1,0 +1,36 @@
+Index: sys/net/if_bridge.c
+===================================================================
+--- sys/net/if_bridge.c	(revision 293659)
++++ sys/net/if_bridge.c	(working copy)
+@@ -3550,22 +3550,25 @@ static void
+ bridge_linkcheck(struct bridge_softc *sc)
+ {
+ 	struct bridge_iflist *bif;
+-	int new_link, hasls;
++	int new_link, nols;
+ 
+ 	BRIDGE_LOCK_ASSERT(sc);
+ 	new_link = LINK_STATE_DOWN;
+-	hasls = 0;
++	nols = 0;
+ 	/* Our link is considered up if at least one of our ports is active */
+ 	LIST_FOREACH(bif, &sc->sc_iflist, bif_next) {
+-		if (bif->bif_ifp->if_capabilities & IFCAP_LINKSTATE)
+-			hasls++;
++		if ((bif->bif_ifp->if_capabilities & IFCAP_LINKSTATE) == 0) {
++			/* XXX: Handle admin down? */
++			nols++;
++			continue;
++		}
+ 		if (bif->bif_ifp->if_link_state == LINK_STATE_UP) {
+ 			new_link = LINK_STATE_UP;
+ 			break;
+ 		}
+ 	}
+-	if (!LIST_EMPTY(&sc->sc_iflist) && !hasls) {
+-		/* If no interfaces support link-state then we default to up */
++	if (!LIST_EMPTY(&sc->sc_iflist) && nols != 0) {
++		/* If some ifaces don't support link-state then we default to up */
+ 		new_link = LINK_STATE_UP;
+ 	}
+ 	if_link_state_change(sc->sc_ifp, new_link);
