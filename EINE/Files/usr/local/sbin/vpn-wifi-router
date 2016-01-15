@@ -54,7 +54,6 @@ def create(args):
     "This create a new VPN-Wifi-router"
 
     print "Creating VPN-Wifi-router {}.".format(args.hostname.lower())
-    sys.exit ("debug")
     # Split subnet (10.0.0.0/24) into a list of 2 elements
     # lan_inet4 = args.lan.split("/", 1)
     lan_inet4 = netaddr.IPNetwork(args.lan)
